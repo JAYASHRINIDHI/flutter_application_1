@@ -10,8 +10,8 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 from keras.layers import Dropout
-#from keras.layers.merge import add
-from tensorflow.keras.layers.merge import add
+from keras.layers import add
+#from tensorflow.keras.layers.merge import add
 from keras.callbacks import ModelCheckpoint
 
 
