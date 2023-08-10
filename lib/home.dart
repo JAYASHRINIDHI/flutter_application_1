@@ -14,31 +14,39 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
-  late File _image;
+ File? _image;
 
   Future getImage(bool isCamera) async {
-    File image;
+    File? image;
+    final ImagePicker picker = ImagePicker();
 
-    if (isCamera) {
-      image = await ImagePicker().pickImage(source: ImageSource.camera) as File;
+     if (isCamera) {
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        image = File(pickedFile.path); // Convert XFile to File
+      }
     } else {
-      image = await ImagePicker().pickImage(source: ImageSource.gallery) as File;
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        image = File(pickedFile.path); // Convert XFile to File
+      }
     }
     
 
-    uploadImage(image, uploadUrl);
-    Fluttertoast.showToast(
-      msg: 'IMAGE UPLOADED !',
-      toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
-      textColor: Colors.black,
-      backgroundColor: Colors.white12,
-      fontSize: 15.0,
-);
-
+     if (image != null) {
+      uploadImage(image, uploadUrl);
+      Fluttertoast.showToast(
+        msg: 'IMAGE UPLOADED !',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        textColor: Colors.black,
+        backgroundColor: Colors.white12,
+        fontSize: 15.0,
+      );
     setState(() {
-      _image = image;
-    });
+        _image = image;
+      });
+    }
   }
 
   @override
@@ -94,23 +102,25 @@ class HomeState extends State<Home> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ResultPage(key: UniqueKey(), image: _image)),
-            );
-          },
-          icon: const Icon(
-            Icons.arrow_forward,
-            color: Colors.black,
-            size: 30,
-          ),
-          label: const Text(
-            "Next",
-            style: TextStyle(color: Colors.black, fontSize: 20),
-          ),
-          backgroundColor: Colors.white,
-        ),
+  onPressed: () {
+    if (_image != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ResultPage(key: UniqueKey(), image: _image!)),
+      );
+    }
+  },
+  icon: const Icon(
+    Icons.arrow_forward,
+    color: Colors.black,
+    size: 30,
+  ),
+  label: const Text(
+    "Next",
+    style: TextStyle(color: Colors.black, fontSize: 20),
+  ),
+  backgroundColor: Colors.white,
+),
       ),
     );
   }
