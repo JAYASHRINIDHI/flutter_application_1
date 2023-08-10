@@ -1,5 +1,6 @@
+import numpy as np
 from numpy import array
-from pickle import load
+from pickle import dump, load
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
@@ -11,8 +12,9 @@ from keras.layers import LSTM
 from keras.layers import Embedding
 from keras.layers import Dropout
 from keras.layers import add
-#from tensorflow.keras.layers.merge import add
 from keras.callbacks import ModelCheckpoint
+#from tensorflow.keras.layers import add
+from keras.preprocessing.sequence import pad_sequences
 
 
 def load_doc(filename):
@@ -49,8 +51,6 @@ def load_photo_features(filename, dataset):
 	features = {k: all_features[k] for k in dataset}
 	return features
 
-
-
 def to_lines(descriptions):
 	all_desc = list()
 	for key in descriptions.keys():
@@ -62,27 +62,37 @@ def create_tokenizer(descriptions):
 	tokenizer = Tokenizer()
 	tokenizer.fit_on_texts(lines)
 	return tokenizer
- 
 
 def create_sequences(tokenizer, max_length, desc_list, photo):
-	X1, X2, y = list(), list(), list()
-	for desc in desc_list:
-		seq = tokenizer.texts_to_sequences([desc])[0]
-		for i in range(1, len(seq)):
-			in_seq, out_seq = seq[:i], seq[i]
-			in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
-			out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
-			X1.append(photo)
-			X2.append(in_seq)
-			y.append(out_seq)
-	return array(X1), array(X2), array(y)
+    # X1, X2, y = list(), list(), list()
+    X1=[]
+    X2=[]
+    y=[]
+    # walk through each description for the image
+    for desc in desc_list:
+        # encode the sequence
+        seq = tokenizer.texts_to_sequences([desc])[0]
+        # split one sequence into multiple X,y pairs
+        for i in range(1, len(seq)):
+            # split into input and output pair
+            in_seq, out_seq = seq[:i], seq[i]
+            # pad input sequence
+            in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
+            # encode output sequence
+            out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+            # store
+            X1.append(photo)
+            X2.append(in_seq)
+            y.append(out_seq)
+    return np.array(X1), np.array(X2), np.array(y)
+
 
 def max_length(descriptions):
 	lines = to_lines(descriptions)
 	return max(len(d.split()) for d in lines)
 
 def define_model(vocab_size,max_length):
-	inputs1=Input(shape=(4096,))
+	inputs1=Input(shape=(1000,))
 	fe1=Dropout(0.5)(inputs1)
 	fe2=Dense(256,activation='relu')(fe1)
 
@@ -108,11 +118,17 @@ def data_generator(descriptions, photos, tokenizer, max_length):
 		for key, desc_list in descriptions.items():
 			photo = photos[key][0]
 			in_img, in_seq, out_word = create_sequences(tokenizer, max_length, desc_list, photo)
+			print("return result")
+			print(in_img.shape)
+			print(in_seq.shape)
+			print(out_word.shape)
+			#return "1","2","3"
 			yield [[in_img, in_seq], out_word]
+
 
 ##################################
 
-filename = 'Flickr_8k.trainImages.txt'
+filename = 'flickr_train_image.txt'
 train = load_set(filename)
 print("train len pics: ",len(train))
 train_descriptions = load_clean_descriptions('descriptions.txt', train)
@@ -125,12 +141,22 @@ print("vocab size: ", vocab_size)
 max_length = max_length(train_descriptions)
 print("maxlen: ",max_length)
 #print("yyyyy")
+
+tokenizer = create_tokenizer(train_descriptions)
+dump(tokenizer, open('tokenizer.pkl', 'wb'))
+vocab_size = len(tokenizer.word_index) + 1
+vocab_size 
  
 model = define_model(vocab_size, max_length)
-epochs = 500
-steps = len(train_descriptions)/32
-for i in range(epochs):
-	generator = data_generator(train_descriptions, train_features, tokenizer, max_length)
-	model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
-	model.save('model_' + str(i) + '.h5')
+epochs = 900
+batch_size = 32
+steps_per_epoch = len(train_descriptions) // batch_size
+print("____________________________________")
 
+
+for i in range(epochs):
+    generator = data_generator(train_descriptions, train_features, tokenizer, max_length)
+    
+    model.fit(generator, epochs=1, steps_per_epoch=steps_per_epoch, verbose=1)
+    print("344534")
+    model.save('models/model_' + str(i) + '.h5')

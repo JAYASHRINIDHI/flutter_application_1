@@ -49,7 +49,7 @@ def save_descriptions(descriptions, filename):
 	file.write(data)
 	file.close()
  
-filename = 'Flickr8k.token.txt'
+filename = 'D:\eyeforblin\eyeforblind\captions.txt'
 doc = load_doc(filename)
 descriptions = load_descriptions(doc)
 print(len(descriptions))

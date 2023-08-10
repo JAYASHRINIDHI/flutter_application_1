@@ -9,22 +9,30 @@ import base64
 import generate_caption as gc
 
 app = Flask(__name__)
-static_dir='images/'
+static_dir='C:/Users/mca/Desktop/mca major project/flutter_application_1/backend/images/'
 
 @app.route('/api', methods=['GET','POST'])
 def apiHome():
     r = request.method
     if(r=="GET"):
-        with open("text/data.json") as f:
+        with open("C:/Users/mca/Desktop/mca major project/flutter_application_1/backend/text/data.json") as f:
             data=json.load(f)
-        return data
+        return jsonify(data)
     elif(r=='POST'):
         with open(static_dir+'sample.jpg',"wb") as fh:
+            #print("here is the request data")
+            #print(request.data)
             fh.write(base64.decodebytes(request.data))
+            #print("done")
         captions=gc.generate_captions(static_dir+'sample.jpg')
+        
         cap={"captions":captions}
-        with open("text/data.json","w") as fjson:
+        with open("C:/Users/mca/Desktop/mca major project/flutter_application_1/backend/text/data.json","w") as fjson:
                     json.dump(cap,fjson)
+                   
+                   
+        return jsonify(cap) 
+            
     else:
         return jsonify({
         "captions":"Refresh again !"
@@ -35,4 +43,4 @@ def sendImage():
     return send_file(static_dir+'sample.jpg',mimetype='image/gif')
 
 if __name__ == '__main__':
-    app.run(debug=True,host='192.168.43.232',port=5000)
+    app.run(debug=True,host='192.168.3.65',port=5000)

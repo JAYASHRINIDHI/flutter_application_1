@@ -46,9 +46,15 @@ def generate_desc(model, tokenizer, photo, max_length):
 
 def generate_captions(photo_path):
         tokenizer = load(open('tokenizer.pkl', 'rb'))
-        max_length = 34
-        model = load_model('model.h5')
+        max_length = 33
+        model = load_model('models/model_899.h5')
         photo = extract_features(photo_path)
         description = generate_desc(model, tokenizer, photo, max_length)
         description = description[9:-6]
         return description
+
+# if __name__ == '__main__':
+#     photo_path = 'D:/eyeforblin/eyeforblind/Images/667626_18933d713e.jpg'  # Replace with the actual path of your image
+#     result = generate_captions(photo_path)
+#     print("Generated Caption:", result)
+
